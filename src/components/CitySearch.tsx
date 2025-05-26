@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,26 @@ const CitySearch = ({ onCitySearch, onRecommendationSelect }) => {
   const [recommendations, setRecommendations] = useState([]);
   const { toast } = useToast();
 
+  const geocodeCity = async (cityName) => {
+    try {
+      // Use OpenStreetMap Nominatim API for geocoding (free)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName)}&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        return [lon, lat]; // Return as [longitude, latitude] for consistency
+      }
+      return null;
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      return null;
+    }
+  };
+
   const searchCity = async () => {
     if (!cityName.trim()) {
       toast({
@@ -26,15 +45,26 @@ const CitySearch = ({ onCitySearch, onRecommendationSelect }) => {
     setIsSearching(true);
     
     try {
-      // Simulate city geocoding and mining potential analysis
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // First geocode the city to get real coordinates
+      const cityCoordinates = await geocodeCity(cityName);
       
-      const mockRecommendations = generateMiningRecommendations(cityName);
+      if (!cityCoordinates) {
+        toast({
+          title: "City Not Found",
+          description: `Could not locate ${cityName}. Please check the spelling and try again.`,
+          variant: "destructive"
+        });
+        setIsSearching(false);
+        return;
+      }
+
+      // Generate mining recommendations based on real coordinates
+      const mockRecommendations = generateMiningRecommendations(cityName, cityCoordinates);
       setRecommendations(mockRecommendations);
       
       if (mockRecommendations.length > 0) {
-        // Center map on the first recommendation
-        onCitySearch(mockRecommendations[0].coordinates, cityName);
+        // Center map on the actual city coordinates
+        onCitySearch(cityCoordinates, cityName);
         
         toast({
           title: "Mining Sites Found",
@@ -48,6 +78,7 @@ const CitySearch = ({ onCitySearch, onRecommendationSelect }) => {
         });
       }
     } catch (error) {
+      console.error('Search error:', error);
       toast({
         title: "Search Error",
         description: "Failed to search for mining sites. Please try again.",
@@ -58,22 +89,26 @@ const CitySearch = ({ onCitySearch, onRecommendationSelect }) => {
     }
   };
 
-  const generateMiningRecommendations = (city) => {
-    const baseLat = 40 + Math.random() * 20;
-    const baseLng = -100 + Math.random() * 40;
+  const generateMiningRecommendations = (city, cityCoordinates) => {
+    const [baseLng, baseLat] = cityCoordinates;
     
     const mineralTypes = ['gold', 'copper', 'iron', 'coal', 'silver', 'diamond'];
     const recommendations = [];
     
     for (let i = 0; i < 6; i++) {
       const mineral = mineralTypes[i % mineralTypes.length];
+      
+      // Generate sites within a reasonable radius (0.5 to 2 degrees) around the actual city
+      const offsetLat = (Math.random() - 0.5) * 4; // Random offset between -2 and +2 degrees
+      const offsetLng = (Math.random() - 0.5) * 4;
+      
       recommendations.push({
         id: `rec-${i}`,
         name: `${mineral.charAt(0).toUpperCase() + mineral.slice(1)} Prospect ${i + 1}`,
         mineral,
         coordinates: [
-          baseLng + (Math.random() - 0.5) * 2,
-          baseLat + (Math.random() - 0.5) * 2
+          baseLng + offsetLng,
+          baseLat + offsetLat
         ],
         distance: Math.floor(Math.random() * 50) + 5,
         potential: ['High', 'Medium', 'Low'][Math.floor(Math.random() * 3)],
