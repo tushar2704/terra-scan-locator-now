@@ -5,14 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { X, Key, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, Key, ExternalLink, CheckCircle } from 'lucide-react';
 
 const ApiKeyManager = ({ onClose }) => {
   const [apiKeys, setApiKeys] = useState({
-    mapbox: '',
-    openweather: '',
-    usgs: 'free', // USGS is free
-    overpass: 'free' // OpenStreetMap is free
+    openweather: ''
   });
 
   const [saved, setSaved] = useState({});
@@ -20,24 +17,16 @@ const ApiKeyManager = ({ onClose }) => {
   useEffect(() => {
     // Load existing keys from localStorage
     const savedKeys = {
-      mapbox: localStorage.getItem('mapbox_token') || '',
-      openweather: localStorage.getItem('openweather_key') || '',
-      usgs: 'free',
-      overpass: 'free'
+      openweather: localStorage.getItem('openweather_key') || ''
     };
     setApiKeys(savedKeys);
     setSaved({
-      mapbox: !!savedKeys.mapbox,
-      openweather: !!savedKeys.openweather,
-      usgs: true,
-      overpass: true
+      openweather: !!savedKeys.openweather
     });
   }, []);
 
   const handleSave = (service, key) => {
-    if (service === 'mapbox') {
-      localStorage.setItem('mapbox_token', key);
-    } else if (service === 'openweather') {
+    if (service === 'openweather') {
       localStorage.setItem('openweather_key', key);
     }
     
@@ -46,18 +35,18 @@ const ApiKeyManager = ({ onClose }) => {
 
   const apiServices = [
     {
-      id: 'mapbox',
-      name: 'Mapbox',
-      description: 'Interactive maps and geocoding',
-      url: 'https://mapbox.com',
-      required: true,
-      placeholder: 'pk.ey...',
-      isFree: false
+      id: 'openstreetmap',
+      name: 'OpenStreetMap',
+      description: 'Free interactive maps and geocoding',
+      url: 'https://openstreetmap.org',
+      required: false,
+      isFree: true,
+      isBuiltIn: true
     },
     {
       id: 'openweather',
       name: 'OpenWeatherMap',
-      description: 'Weather data for mining sites',
+      description: 'Weather data for mining sites (optional)',
       url: 'https://openweathermap.org/api',
       required: false,
       placeholder: 'Enter API key...',
@@ -103,7 +92,16 @@ const ApiKeyManager = ({ onClose }) => {
         
         <CardContent className="space-y-6">
           <div className="text-sm text-stone-400">
-            Configure API keys for enhanced features. All keys are stored locally and never shared.
+            TerraScan now uses completely free APIs! All core functionality works without any API keys. 
+            Only OpenWeatherMap is optional for enhanced weather data.
+          </div>
+
+          <div className="bg-green-900/20 border border-green-700 rounded-lg p-4">
+            <h3 className="text-green-400 font-semibold mb-2">✅ 100% Free to Use</h3>
+            <p className="text-green-300 text-sm">
+              All mapping and geological data is now provided by free, open-source APIs. 
+              No paid subscriptions or API keys required for core functionality.
+            </p>
           </div>
 
           {apiServices.map(service => (
@@ -112,16 +110,9 @@ const ApiKeyManager = ({ onClose }) => {
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
                     <h3 className="font-semibold text-stone-100">{service.name}</h3>
-                    {service.isFree && (
-                      <Badge variant="secondary" className="bg-green-500/20 text-green-400 text-xs">
-                        Free
-                      </Badge>
-                    )}
-                    {service.required && (
-                      <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 text-xs">
-                        Required
-                      </Badge>
-                    )}
+                    <Badge variant="secondary" className="bg-green-500/20 text-green-400 text-xs">
+                      Free
+                    </Badge>
                     {service.isBuiltIn && (
                       <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 text-xs">
                         Built-in
@@ -132,11 +123,7 @@ const ApiKeyManager = ({ onClose }) => {
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  {saved[service.id] ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : service.required ? (
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                  ) : null}
+                  <CheckCircle className="h-4 w-4 text-green-500" />
                   
                   <Button
                     variant="ghost"
@@ -149,10 +136,10 @@ const ApiKeyManager = ({ onClose }) => {
                 </div>
               </div>
 
-              {!service.isBuiltIn && (
+              {!service.isBuiltIn && service.id === 'openweather' && (
                 <div className="space-y-2">
                   <Label htmlFor={service.id} className="text-stone-300 text-sm">
-                    API Key
+                    API Key (Optional)
                   </Label>
                   <div className="flex space-x-2">
                     <Input
@@ -176,17 +163,9 @@ const ApiKeyManager = ({ onClose }) => {
                     </Button>
                   </div>
                   
-                  {service.id === 'mapbox' && (
-                    <p className="text-xs text-stone-500">
-                      Free tier includes 50,000 map loads per month
-                    </p>
-                  )}
-                  
-                  {service.id === 'openweather' && (
-                    <p className="text-xs text-stone-500">
-                      Free tier includes 1,000 API calls per day
-                    </p>
-                  )}
+                  <p className="text-xs text-stone-500">
+                    Free tier includes 1,000 API calls per day. Optional for weather overlays.
+                  </p>
                 </div>
               )}
 
@@ -199,10 +178,11 @@ const ApiKeyManager = ({ onClose }) => {
           ))}
 
           <div className="text-xs text-stone-500 space-y-1">
-            <p>• All API keys are stored locally in your browser</p>
-            <p>• TerraScan never sends your keys to external servers</p>
-            <p>• Free APIs provide comprehensive geological data</p>
-            <p>• Optional paid APIs enhance map visualization</p>
+            <p>• All core features work without any API keys</p>
+            <p>• OpenStreetMap provides free, unlimited mapping</p>
+            <p>• USGS and Overpass APIs are completely free and open</p>
+            <p>• Only OpenWeatherMap is optional for enhanced weather data</p>
+            <p>• All keys are stored locally and never shared</p>
           </div>
 
           <div className="flex justify-end">
