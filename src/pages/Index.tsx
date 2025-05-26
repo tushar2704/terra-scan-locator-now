@@ -10,6 +10,7 @@ import InteractiveMap from '@/components/InteractiveMap';
 import MiningSiteList from '@/components/MiningSiteList';
 import ApiKeyManager from '@/components/ApiKeyManager';
 import SiteDetailsPanel from '@/components/SiteDetailsPanel';
+import CitySearch from '@/components/CitySearch';
 import { useMiningSites } from '@/hooks/useMiningSites';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,6 +20,7 @@ const Index = () => {
   const [showApiManager, setShowApiManager] = useState(false);
   const [mapCenter, setMapCenter] = useState([0, 20]);
   const [activeFilters, setActiveFilters] = useState(['mining', 'geological']);
+  const [searchedCity, setSearchedCity] = useState('');
   
   const { data: miningSites, isLoading, error } = useMiningSites(mapCenter, activeFilters);
   const { toast } = useToast();
@@ -43,6 +45,33 @@ const Index = () => {
     setMapCenter([site.longitude, site.latitude]);
   };
 
+  const handleCitySearch = (coordinates, cityName) => {
+    setMapCenter(coordinates);
+    setSearchedCity(cityName);
+    setSelectedSite(null);
+  };
+
+  const handleRecommendationSelect = (recommendation) => {
+    setMapCenter(recommendation.coordinates);
+    // Create a mock site object for the recommendation
+    const mockSite = {
+      id: recommendation.id,
+      name: recommendation.name,
+      type: recommendation.mineral,
+      category: 'mining',
+      latitude: recommendation.coordinates[1],
+      longitude: recommendation.coordinates[0],
+      status: 'potential',
+      distance: recommendation.distance,
+      potential: recommendation.potential,
+      confidence: recommendation.confidence,
+      estimatedValue: recommendation.estimatedValue,
+      geologicalFactor: recommendation.geologicalFactor,
+      accessRating: recommendation.accessRating
+    };
+    setSelectedSite(mockSite);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-stone-900 to-amber-900">
       {/* Header */}
@@ -65,6 +94,11 @@ const Index = () => {
                 <Zap className="h-4 w-4 text-green-500" />
                 <span className="text-sm text-green-500">Live Data</span>
               </div>
+              {searchedCity && (
+                <Badge variant="secondary" className="bg-amber-500/20 text-amber-400">
+                  Searching: {searchedCity}
+                </Badge>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -83,6 +117,12 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-140px)]">
           {/* Left Sidebar */}
           <div className="lg:col-span-1 space-y-4">
+            {/* City Search */}
+            <CitySearch 
+              onCitySearch={handleCitySearch}
+              onRecommendationSelect={handleRecommendationSelect}
+            />
+
             {/* Search */}
             <Card className="bg-stone-800/50 border-stone-700">
               <CardHeader className="pb-3">
