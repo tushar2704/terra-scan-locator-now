@@ -4,6 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, MapPin, Zap, AlertTriangle } from 'lucide-react';
 
+interface StatItem {
+  title: string;
+  value: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  bgColor: string;
+}
+
 const StatsDashboard = ({ sites, selectedSite, searchedCity }) => {
   const activeSites = sites.filter(s => s.status === 'active').length;
   const potentialSites = sites.filter(s => s.status === 'potential').length;
@@ -20,7 +28,7 @@ const StatsDashboard = ({ sites, selectedSite, searchedCity }) => {
     ? Math.round(sites.reduce((sum, site) => sum + (site.confidence || 0), 0) / sites.length)
     : 0;
 
-  const stats = [
+  const stats: StatItem[] = [
     {
       title: 'Total Sites',
       value: sites.length.toString(),
