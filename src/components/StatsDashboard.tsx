@@ -23,21 +23,21 @@ const StatsDashboard = ({ sites, selectedSite, searchedCity }) => {
   const stats = [
     {
       title: 'Total Sites',
-      value: sites.length,
+      value: sites.length.toString(),
       icon: MapPin,
       color: 'text-blue-400',
       bgColor: 'bg-blue-500/20'
     },
     {
       title: 'Active Mines',
-      value: activeSites,
+      value: activeSites.toString(),
       icon: Zap,
       color: 'text-green-400',
       bgColor: 'bg-green-500/20'
     },
     {
       title: 'High Potential',
-      value: highPotentialSites,
+      value: highPotentialSites.toString(),
       icon: TrendingUp,
       color: 'text-amber-400',
       bgColor: 'bg-amber-500/20'
@@ -66,7 +66,7 @@ const StatsDashboard = ({ sites, selectedSite, searchedCity }) => {
               <div className="flex items-center justify-between mb-2">
                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
                 <Badge variant="secondary" className={`${stat.bgColor} ${stat.color} text-xs`}>
-                  {String(stat.value)}
+                  {stat.value}
                 </Badge>
               </div>
               <p className="text-stone-300 text-xs font-medium">{stat.title}</p>
