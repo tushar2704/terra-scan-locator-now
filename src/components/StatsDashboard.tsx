@@ -66,7 +66,7 @@ const StatsDashboard = ({ sites, selectedSite, searchedCity }) => {
               <div className="flex items-center justify-between mb-2">
                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
                 <Badge variant="secondary" className={`${stat.bgColor} ${stat.color} text-xs`}>
-                  {stat.value}
+                  {String(stat.value)}
                 </Badge>
               </div>
               <p className="text-stone-300 text-xs font-medium">{stat.title}</p>

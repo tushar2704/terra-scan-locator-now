@@ -137,7 +137,7 @@ High Potential Sites: ${highPotentialSites}
 
 MINERAL DISTRIBUTION
 ===================
-${mineralCounts.map(m => `${m.type.toUpperCase()}: ${m.count} sites`).join('\n')}
+${mineralCounts.map(m => `${String(m.type).toUpperCase()}: ${m.count} sites`).join('\n')}
 
 DETAILED SITE INFORMATION
 ========================
