@@ -84,7 +84,7 @@ const Index = () => {
                 <Pickaxe className="absolute -bottom-1 -right-1 h-4 w-4 text-stone-400" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">TerraScan by Omdena</h1>
+                <h1 className="text-2xl font-bold text-white">TerraScan by Tushar</h1>
                 <p className="text-sm text-stone-400">Real-Time Mining Site Locator</p>
               </div>
             </div>
