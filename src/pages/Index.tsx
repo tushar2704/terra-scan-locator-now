@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,8 @@ import MiningSiteList from '@/components/MiningSiteList';
 import ApiKeyManager from '@/components/ApiKeyManager';
 import SiteDetailsPanel from '@/components/SiteDetailsPanel';
 import CitySearch from '@/components/CitySearch';
+import StatsDashboard from '@/components/StatsDashboard';
+import DataExportPanel from '@/components/DataExportPanel';
 import { useMiningSites } from '@/hooks/useMiningSites';
 import { useToast } from '@/hooks/use-toast';
 
@@ -116,7 +117,7 @@ const Index = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-140px)]">
           {/* Left Sidebar */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className="lg:col-span-1 space-y-4 overflow-y-auto">
             {/* City Search */}
             <CitySearch 
               onCitySearch={handleCitySearch}
@@ -178,34 +179,19 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Stats */}
-            <Card className="bg-stone-800/50 border-stone-700">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-stone-100">Statistics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-stone-400 text-sm">Total Sites</span>
-                    <Badge variant="secondary" className="bg-amber-500/20 text-amber-400">
-                      {filteredSites.length}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-400 text-sm">Active Mines</span>
-                    <Badge variant="secondary" className="bg-green-500/20 text-green-400">
-                      {filteredSites.filter(s => s.status === 'active').length}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-400 text-sm">Data Sources</span>
-                    <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
-                      4
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* New Analytics Dashboard */}
+            <StatsDashboard 
+              sites={filteredSites}
+              selectedSite={selectedSite}
+              searchedCity={searchedCity}
+            />
+
+            {/* New Data Export Panel */}
+            <DataExportPanel 
+              sites={filteredSites}
+              selectedSite={selectedSite}
+              searchedCity={searchedCity}
+            />
           </div>
 
           {/* Main Content */}
