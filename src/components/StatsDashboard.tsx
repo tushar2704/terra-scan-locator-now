@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +11,23 @@ interface StatItem {
   bgColor: string;
 }
 
-const StatsDashboard = ({ sites, selectedSite, searchedCity }) => {
+interface Site {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  potential?: string;
+  confidence?: number;
+  [key: string]: any;
+}
+
+interface StatsDashboardProps {
+  sites: Site[];
+  selectedSite: Site | null;
+  searchedCity: string | null;
+}
+
+const StatsDashboard: React.FC<StatsDashboardProps> = ({ sites, selectedSite, searchedCity }) => {
   const activeSites = sites.filter(s => s.status === 'active').length;
   const potentialSites = sites.filter(s => s.status === 'potential').length;
   const highPotentialSites = sites.filter(s => s.potential === 'High').length;
