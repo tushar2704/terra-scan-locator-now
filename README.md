@@ -36,7 +36,7 @@ Before running this project, make sure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone <YOUR_GIT_URL>
+git clone https://github.com/tushar2704/terra-scan-locator-now.git
 cd terrascan
 ```
 
