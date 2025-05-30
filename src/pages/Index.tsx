@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,10 +21,11 @@ const Index = () => {
   const [selectedSite, setSelectedSite] = useState(null);
   const [showApiManager, setShowApiManager] = useState(false);
   const [mapCenter, setMapCenter] = useState([0, 20]);
+  const [mapBounds, setMapBounds] = useState(null);
   const [activeFilters, setActiveFilters] = useState(['mining', 'geological']);
   const [searchedCity, setSearchedCity] = useState('');
   
-  const { data: miningSites, isLoading, error } = useMiningSites(mapCenter, activeFilters);
+  const { data: miningSites, isLoading, error } = useMiningSites(mapCenter, activeFilters, mapBounds);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -50,6 +52,15 @@ const Index = () => {
     setMapCenter(coordinates);
     setSearchedCity(cityName);
     setSelectedSite(null);
+  };
+
+  const handleMapMove = (mapData) => {
+    setMapCenter(mapData.center);
+    setMapBounds(mapData.bounds);
+    // Clear city search when user manually moves map
+    if (searchedCity) {
+      setSearchedCity('');
+    }
   };
 
   const handleRecommendationSelect = (recommendation) => {
@@ -98,6 +109,11 @@ const Index = () => {
               {searchedCity && (
                 <Badge variant="secondary" className="bg-amber-500/20 text-amber-400">
                   Searching: {searchedCity}
+                </Badge>
+              )}
+              {isLoading && (
+                <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
+                  Updating...
                 </Badge>
               )}
               <Button
@@ -217,6 +233,7 @@ const Index = () => {
                   onSiteSelect={handleSiteSelect}
                   selectedSite={selectedSite}
                   activeFilters={activeFilters}
+                  onMapMove={handleMapMove}
                 />
               </CardContent>
             </Card>

@@ -1,22 +1,35 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-const generateMockSites = (center, filters) => {
+const generateMockSites = (center, filters, bounds = null) => {
   const sites = [];
-  const [centerLng, centerLat] = center;
+  let [centerLng, centerLat] = center;
+  
+  // If bounds are provided, use them to generate sites within the visible area
+  let latRange = 20;
+  let lngRange = 40;
+  
+  if (bounds) {
+    latRange = bounds.north - bounds.south;
+    lngRange = bounds.east - bounds.west;
+    centerLat = (bounds.north + bounds.south) / 2;
+    centerLng = (bounds.east + bounds.west) / 2;
+  }
   
   // Generate sites based on active filters
   if (filters.includes('mining')) {
     const miningTypes = ['gold', 'copper', 'iron', 'coal', 'diamond', 'silver', 'platinum'];
-    for (let i = 0; i < 25; i++) {
+    const numSites = bounds ? Math.min(50, Math.max(15, Math.floor(latRange * lngRange * 0.5))) : 25;
+    
+    for (let i = 0; i < numSites; i++) {
       const type = miningTypes[Math.floor(Math.random() * miningTypes.length)];
       sites.push({
         id: `mining-${i}`,
         name: `${type.charAt(0).toUpperCase() + type.slice(1)} Mine ${i + 1}`,
         type,
         category: 'mining',
-        latitude: centerLat + (Math.random() - 0.5) * 20,
-        longitude: centerLng + (Math.random() - 0.5) * 40,
+        latitude: centerLat + (Math.random() - 0.5) * latRange,
+        longitude: centerLng + (Math.random() - 0.5) * lngRange,
         status: Math.random() > 0.3 ? 'active' : 'inactive',
         distance: Math.floor(Math.random() * 500) + 10,
         depth: Math.floor(Math.random() * 800) + 50,
@@ -43,14 +56,16 @@ const generateMockSites = (center, filters) => {
   }
 
   if (filters.includes('geological')) {
-    for (let i = 0; i < 15; i++) {
+    const numSites = bounds ? Math.min(30, Math.max(8, Math.floor(latRange * lngRange * 0.3))) : 15;
+    
+    for (let i = 0; i < numSites; i++) {
       sites.push({
         id: `geological-${i}`,
         name: `Geological Formation ${i + 1}`,
         type: 'geological',
         category: 'geological',
-        latitude: centerLat + (Math.random() - 0.5) * 20,
-        longitude: centerLng + (Math.random() - 0.5) * 40,
+        latitude: centerLat + (Math.random() - 0.5) * latRange,
+        longitude: centerLng + (Math.random() - 0.5) * lngRange,
         status: 'active',
         distance: Math.floor(Math.random() * 300) + 5,
         elevation: Math.floor(Math.random() * 3000) + 200,
@@ -65,14 +80,16 @@ const generateMockSites = (center, filters) => {
   }
 
   if (filters.includes('seismic')) {
-    for (let i = 0; i < 8; i++) {
+    const numSites = bounds ? Math.min(15, Math.max(3, Math.floor(latRange * lngRange * 0.2))) : 8;
+    
+    for (let i = 0; i < numSites; i++) {
       sites.push({
         id: `seismic-${i}`,
         name: `Seismic Station ${i + 1}`,
         type: 'seismic',
         category: 'seismic',
-        latitude: centerLat + (Math.random() - 0.5) * 15,
-        longitude: centerLng + (Math.random() - 0.5) * 30,
+        latitude: centerLat + (Math.random() - 0.5) * latRange * 0.8,
+        longitude: centerLng + (Math.random() - 0.5) * lngRange * 0.8,
         status: 'active',
         distance: Math.floor(Math.random() * 200) + 10,
         magnitude: (Math.random() * 3 + 1).toFixed(1),
@@ -91,22 +108,22 @@ const generateMockSites = (center, filters) => {
   return sites;
 };
 
-export const useMiningSites = (center, filters) => {
+export const useMiningSites = (center, filters, bounds = null) => {
   return useQuery({
-    queryKey: ['mining-sites', center, filters],
+    queryKey: ['mining-sites', center, filters, bounds],
     queryFn: async () => {
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      // In a real app, this would fetch from multiple APIs:
-      // 1. OpenStreetMap/Overpass API for mining sites
-      // 2. USGS API for geological data
-      // 3. OpenWeatherMap for environmental data
-      // 4. Various geological survey APIs
+      // In a real app, this would fetch from multiple APIs based on viewport bounds:
+      // 1. OpenStreetMap/Overpass API for mining sites within bounds
+      // 2. USGS API for geological data within bounds
+      // 3. OpenWeatherMap for environmental data within bounds
+      // 4. Various geological survey APIs within bounds
       
-      return generateMockSites(center, filters);
+      return generateMockSites(center, filters, bounds);
     },
     refetchInterval: 30000, // Refetch every 30 seconds for "real-time" data
-    staleTime: 10000, // Consider data stale after 10 seconds
+    staleTime: 5000, // Consider data stale after 5 seconds for more responsive updates
   });
 };

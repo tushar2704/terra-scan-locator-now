@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, AlertTriangle, Mountain } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +12,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const InteractiveMap = ({ sites, center, onSiteSelect, selectedSite, activeFilters }) => {
+const InteractiveMap = ({ sites, center, onSiteSelect, selectedSite, activeFilters, onMapMove }) => {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef({});
@@ -30,6 +29,26 @@ const InteractiveMap = ({ sites, center, onSiteSelect, selectedSite, activeFilte
         attribution: '© OpenStreetMap contributors',
         maxZoom: 19,
       }).addTo(mapRef.current);
+
+      // Add map move/zoom event listeners
+      mapRef.current.on('moveend', () => {
+        if (onMapMove && mapRef.current) {
+          const mapCenter = mapRef.current.getCenter();
+          const bounds = mapRef.current.getBounds();
+          const zoom = mapRef.current.getZoom();
+          
+          onMapMove({
+            center: [mapCenter.lng, mapCenter.lat],
+            bounds: {
+              north: bounds.getNorth(),
+              south: bounds.getSouth(),
+              east: bounds.getEast(),
+              west: bounds.getWest()
+            },
+            zoom
+          });
+        }
+      });
     }
 
     return () => {
@@ -38,7 +57,7 @@ const InteractiveMap = ({ sites, center, onSiteSelect, selectedSite, activeFilte
         mapRef.current = null;
       }
     };
-  }, []);
+  }, [onMapMove]);
 
   useEffect(() => {
     if (!mapRef.current) return;
