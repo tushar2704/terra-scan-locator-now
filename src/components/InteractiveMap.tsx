@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+
+import React, { useEffect, useRef, useCallback } from 'react';
 import { MapPin, AlertTriangle, Mountain } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import L from 'leaflet';
@@ -16,51 +17,76 @@ const InteractiveMap = ({ sites, center, onSiteSelect, selectedSite, activeFilte
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef({});
+  const isInitializedRef = useRef(false);
 
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    // Initialize map
-    if (!mapRef.current) {
-      mapRef.current = L.map(mapContainer.current).setView([center[1], center[0]], 4);
-
-      // Add OpenStreetMap tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19,
-      }).addTo(mapRef.current);
-
-      // Add map move/zoom event listeners
-      mapRef.current.on('moveend', () => {
-        if (onMapMove && mapRef.current) {
-          const mapCenter = mapRef.current.getCenter();
-          const bounds = mapRef.current.getBounds();
-          const zoom = mapRef.current.getZoom();
-          
-          onMapMove({
-            center: [mapCenter.lng, mapCenter.lat],
-            bounds: {
-              north: bounds.getNorth(),
-              south: bounds.getSouth(),
-              east: bounds.getEast(),
-              west: bounds.getWest()
-            },
-            zoom
-          });
-        }
+  // Memoize the map move handler to prevent infinite re-renders
+  const handleMapMove = useCallback(() => {
+    if (onMapMove && mapRef.current) {
+      const mapCenter = mapRef.current.getCenter();
+      const bounds = mapRef.current.getBounds();
+      const zoom = mapRef.current.getZoom();
+      
+      onMapMove({
+        center: [mapCenter.lng, mapCenter.lat],
+        bounds: {
+          north: bounds.getNorth(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          west: bounds.getWest()
+        },
+        zoom
       });
     }
+  }, [onMapMove]);
+
+  // Initialize map only once
+  useEffect(() => {
+    if (!mapContainer.current || isInitializedRef.current) return;
+
+    console.log('Initializing map...');
+    
+    // Initialize map
+    mapRef.current = L.map(mapContainer.current).setView([center[1], center[0]], 4);
+
+    // Add OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(mapRef.current);
+
+    // Add map move/zoom event listeners with debouncing
+    let moveTimeout;
+    mapRef.current.on('moveend', () => {
+      clearTimeout(moveTimeout);
+      moveTimeout = setTimeout(handleMapMove, 300);
+    });
+
+    isInitializedRef.current = true;
+    console.log('Map initialized successfully');
 
     return () => {
+      console.log('Cleaning up map...');
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
+      isInitializedRef.current = false;
     };
-  }, [onMapMove]);
+  }, []); // Only run once on mount
 
+  // Handle center changes
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (mapRef.current && center && isInitializedRef.current) {
+      console.log('Updating map center to:', center);
+      mapRef.current.setView([center[1], center[0]], mapRef.current.getZoom());
+    }
+  }, [center]);
+
+  // Handle sites and markers
+  useEffect(() => {
+    if (!mapRef.current || !isInitializedRef.current) return;
+
+    console.log('Updating markers, sites count:', sites?.length || 0);
 
     // Clear existing markers
     Object.values(markersRef.current).forEach((marker) => {
@@ -69,7 +95,7 @@ const InteractiveMap = ({ sites, center, onSiteSelect, selectedSite, activeFilte
     markersRef.current = {};
 
     // Add new markers
-    sites.forEach((site) => {
+    sites?.forEach((site) => {
       const getSiteColor = (site) => {
         switch (site.type) {
           case 'gold': return '#FFD700';
@@ -141,12 +167,6 @@ const InteractiveMap = ({ sites, center, onSiteSelect, selectedSite, activeFilte
       markersRef.current[site.id] = marker;
     });
   }, [sites, selectedSite, onSiteSelect]);
-
-  useEffect(() => {
-    if (mapRef.current && center) {
-      mapRef.current.setView([center[1], center[0]], mapRef.current.getZoom());
-    }
-  }, [center]);
 
   return (
     <div className="h-full relative bg-stone-900 rounded-lg overflow-hidden">
